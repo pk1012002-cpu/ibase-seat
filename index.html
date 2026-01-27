@@ -124,54 +124,87 @@
 	  outline: none !important;
 	}
 	
+	/* =========================
+   左右排列：座位圖 + 資訊框
+   ========================= */
+.layout{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+/* 左邊座位圖吃剩下寬度 */
+.layout .frame{
+  flex: 1 1 auto;
+}
+
+/* 右邊 infoBox 固定寬度 */
+#infoBox{
+  flex: 0 0 260px;
+  background:#fff;
+  border:1px solid #cfcfcf;
+  border-radius:14px;
+  padding:12px 14px;
+  font-size:14px;
+  max-height: 520px;      /* 跟座位圖高度接近 */
+  overflow-y: auto;       /* 人名多可捲動 */
+}
+
+/* infoBox 文字樣式 */
+#infoBox .info-title{
+  font-weight:900;
+  font-size:16px;
+  margin-bottom:6px;
+}
+#infoBox .info-hint{
+  font-size:13px;
+  color:#666;
+}
   </style>
 </head>
 <body>
 <header>
-  <h1>座位圖（127桌）</h1>
+  <h1>座位圖</h1>
   <div class="toolbar">
     <input id="q" type="text" placeholder="搜尋桌號：127、20-35、3,8,9…" />
     <button id="btnSearch" type="button">搜尋</button>
     <button id="btnReset" type="button">重設</button>
   </div>
-  <div class="hint">
-    已依照你提供的圖：黃底舞台＋兩條「升降星光大道」＋中區桌位間距加大。點選桌號也會高亮。
-  </div>
 </header>
 
 <main>
-	<div id="infoBox" style="
-	  background:#fff;
-	  border:1px solid #cfcfcf;
-	  border-radius:14px;
-	  padding:12px 14px;
-	  margin-bottom:10px;
-	  font-size:14px;
-	">
-	  <div style="font-weight:800; margin-bottom:6px;">尚未選擇桌位</div>
-	  <div style="color:#666; font-size:13px;">請點選桌位顯示桌號與人名。</div>
+  <!-- ✅ 左右版面容器 -->
+  <div class="layout">
+
+    <!-- 左：座位圖 -->
+    <div class="frame">
+      <svg id="map" viewBox="0 0 1000 520">
+		  <!-- 外框（示意） -->
+		  <rect class="outer" x="20" y="20" width="960" height="480"></rect>
+
+		  <!-- 舞台（黃底） -->
+		  <rect class="stage" x="380" y="80" width="240" height="90"></rect>
+		  <text class="label" x="500" y="125">舞台</text>
+
+		  <!-- 兩條升降星光大道（直向走道） -->
+		  <rect class="aisle" x="320" y="150" width="55" height="300"></rect>
+		  <text class="label muted" x="347.5" y="310" transform="rotate(-90 347.5 310)">升降星光大道</text>
+
+		  <rect class="aisle" x="675" y="150" width="55" height="300"></rect>
+		  <text class="label muted" x="702.5" y="310" transform="rotate(-90 702.5 310)">升降星光大道</text>
+
+		  <!-- 群組容器：座位會由 JS 產生 -->
+		  <g id="seats"></g>
+      </svg>
+    </div>
+
+    <!-- 右：桌號 / 人名資訊 -->
+    <div id="infoBox">
+      <div class="info-title">尚未選擇桌位</div>
+      <div class="info-hint">請點選桌位或搜尋桌號顯示人名。</div>
+    </div>
+
 	</div>
-
-  <div class="frame">
-    <svg id="map" viewBox="0 0 1000 520" role="img" aria-label="127桌座位圖">
-      <!-- 外框（示意） -->
-      <rect class="outer" x="20" y="20" width="960" height="480"></rect>
-
-      <!-- 舞台（黃底） -->
-      <rect class="stage" x="380" y="80" width="240" height="90"></rect>
-      <text class="label" x="500" y="125">舞台</text>
-
-      <!-- 兩條升降星光大道（直向走道） -->
-      <rect class="aisle" x="320" y="150" width="55" height="300"></rect>
-      <text class="label muted" x="347.5" y="310" transform="rotate(-90 347.5 310)">升降星光大道</text>
-
-      <rect class="aisle" x="675" y="150" width="55" height="300"></rect>
-      <text class="label muted" x="702.5" y="310" transform="rotate(-90 702.5 310)">升降星光大道</text>
-
-      <!-- 群組容器：座位會由 JS 產生 -->
-      <g id="seats"></g>
-    </svg>
-  </div>
 </main>
 
 <script>
@@ -394,7 +427,7 @@
       clearMarks();
       g.classList.add("hit");
 
-	//showSeatInfo(s.no);
+		showSeatInfo(s.no);
       // 捲到視野中央
       g.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
     });
