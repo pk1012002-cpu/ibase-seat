@@ -91,6 +91,7 @@
       stroke-width: 4;
       filter: drop-shadow(0 0 6px rgba(37,99,235,.35));
     }
+	
     .label{
       font-size:14px;
       fill:#333;
@@ -115,6 +116,14 @@
       stroke-width:2;
       rx:14;
     }
+	/* ✅ 取消 SVG 點擊後的藍色 focus 外框 */
+	.seat, .seat:focus, .seat:focus-visible,
+	svg g:focus, svg g:focus-visible,
+	svg circle:focus, svg circle:focus-visible,
+	svg text:focus, svg text:focus-visible {
+	  outline: none !important;
+	}
+	
   </style>
 </head>
 <body>
@@ -131,6 +140,18 @@
 </header>
 
 <main>
+	<div id="infoBox" style="
+	  background:#fff;
+	  border:1px solid #cfcfcf;
+	  border-radius:14px;
+	  padding:12px 14px;
+	  margin-bottom:10px;
+	  font-size:14px;
+	">
+	  <div style="font-weight:800; margin-bottom:6px;">尚未選擇桌位</div>
+	  <div style="color:#666; font-size:13px;">請點選桌位顯示桌號與人名。</div>
+	</div>
+
   <div class="frame">
     <svg id="map" viewBox="0 0 1000 520" role="img" aria-label="127桌座位圖">
       <!-- 外框（示意） -->
@@ -155,14 +176,40 @@
 
 <script>
   // ============ 座位資料（依照圖的相對位置手動定位） ============
+	/* ===== 每桌 10 個人名 ===== */
+	const seatNames = {
+	  "20": [
+		"Charlie","陳美麗","林志豪","黃怡君","張家豪",
+		"Alice","許勝傑","郭雅雯","周品妤","蔡宗翰"
+	  ],
+	  "21": [
+		"Alice","Bob","陳美麗","David","Eve",
+		"Frank","Grace","Heidi","Ivan","Judy"
+	  ],
+	  "127": [
+		"董事長","總經理","副總A","副總B","貴賓一",
+		"貴賓二","貴賓三","貴賓四","貴賓五","貴賓六"
+	  ]
+	};
+
+	/* 沒設定名單的桌，回傳空陣列 */
+	function getNames(no){
+	  return seatNames[String(no)] || [];
+	}
+  
   // 座標系：viewBox 1000x520
   // r: 半徑（一般 18，大圈 20）
-  const seats = [];
+	const seats = [];
 
-  function add(no, x, y, r=18){
-    seats.push({ no: String(no), x, y, r });
-  }
-
+	/* 自動依桌號帶入 10 個人名 */
+	function add(no, x, y, r=18){
+	  seats.push({
+		no: String(no),
+		x, y, r,
+		names: getNames(no)   // 👈 關鍵
+	  });
+	}
+	
   // ----- 左區 (52-89) + 53 (大) + 52 (單顆) -----
   add(52, 95, 140, 18);
   add(53, 225, 140, 20); // 大圈
@@ -285,6 +332,39 @@
       add(rightRows[i][j], rx[j], ry[i], 18);
     }
   }
+	  
+	// ✅ 依桌號找到 seats 裡的資料（包含 names）
+	function findSeat(no){
+	  return seats.find(s => s.no === String(no));
+	}
+
+	// ✅ 更新右側/上方資訊面板
+	function showSeatInfo(no){
+	  const box = document.getElementById("infoBox");
+	  const seat = findSeat(no);
+
+	  if (!box) return;
+
+	  if (!seat){
+		box.innerHTML = `
+		  <div style="font-weight:800; margin-bottom:6px;">找不到桌位：${no}</div>
+		`;
+		return;
+	  }
+
+	  const names = (seat.names && seat.names.length) ? seat.names : ["（此桌尚未設定人名）"];
+	  const list = names.map(n => `<li style="margin:2px 0;">${n}</li>`).join("");
+
+	  box.innerHTML = `
+		<div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+		  <div style="font-weight:900; font-size:16px;">桌號：${seat.no}</div>
+		  <div style="color:#666; font-size:13px;">共 ${seat.names.length} 人</div>
+		</div>
+		<ol style="margin:0; padding-left:18px;">
+		  ${list}
+		</ol>
+	  `;
+	}
 
   // ============ 渲染 SVG 座位 ============
   const seatsG = document.getElementById("seats");
@@ -293,6 +373,9 @@
     const g = document.createElementNS("http://www.w3.org/2000/svg","g");
     g.setAttribute("class", "seat" + (s.r>=20 ? " big" : ""));
     g.dataset.no = s.no;
+
+	g.dataset.names = (s.names || []).join(" ").toLowerCase();
+	g.setAttribute("tabindex", "-1"); // ✅ 不讓 g 被 focus
 
     const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
     c.setAttribute("cx", s.x);
@@ -310,13 +393,15 @@
     g.addEventListener("click", () => {
       clearMarks();
       g.classList.add("hit");
+
+	//showSeatInfo(s.no);
       // 捲到視野中央
       g.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
     });
 
     return g;
   }
-
+  
   seats.forEach(s => seatsG.appendChild(seatEl(s)));
 
   // ============ 搜尋 ============
@@ -353,31 +438,43 @@
     document.querySelectorAll(".seat").forEach(el => el.classList.remove("hit"));
   }
 
-  function applySearch(){
-    const text = q.value.trim();
-    clearMarks();
-    if (!text) return;
+	function applySearch(){
+	  const text = q.value.trim();
+	  clearMarks();
+	  if (!text) return;
 
-    const nos = parseQueryToNos(text);
-    const needle = text.toLowerCase();
+	  const nos = parseQueryToNos(text);   // 桌號 / 範圍
+	  const needle = text.toLowerCase();   // 姓名關鍵字
 
-    let first = null;
-    document.querySelectorAll(".seat").forEach(el => {
-      const no = el.dataset.no;
-      let hit = false;
+	  let first = null;
+	  document.querySelectorAll(".seat").forEach(el => {
+		const no = el.dataset.no;
+		const names = el.dataset.names || "";
+		let hit = false;
 
-      if (nos && nos.includes(no)) hit = true;
-      // 這版主要用桌號；仍保留文字匹配（輸入 "福" 也可找 127）
-      if (!hit && (no.includes(needle) || (needle === "福" && no === "127"))) hit = true;
+		// 1️⃣ 桌號搜尋（20、20-25、3,8,9）
+		if (nos && nos.includes(no)) hit = true;
 
-      if (hit){
-        el.classList.add("hit");
-        if (!first) first = el;
-      }
-    });
+		// 2️⃣ 姓名搜尋（王小明 / 小明 / alice）
+		if (!hit && !nos && names.includes(needle)) hit = true;
 
-    if (first) first.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
-  }
+		// 3️⃣ 特例：輸入「福」找 127
+		if (!hit && needle === "福" && no === "127") hit = true;
+
+		if (hit){
+		  el.classList.add("hit");
+		  if (!first) first = el;
+		}
+	  });
+
+	  if (first){
+		first.scrollIntoView({behavior:"smooth", block:"center"});
+		// ⭐ 搜尋時，同步顯示該桌人名
+		showSeatInfo(first.dataset.no);
+	  }else{
+		alert("找不到符合的桌位或姓名");
+	  }
+	}
 
   btnSearch.addEventListener("click", applySearch);
   q.addEventListener("keydown", (e)=>{ if(e.key==="Enter") applySearch(); });
