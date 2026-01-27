@@ -461,6 +461,22 @@
     if (/^\d+$/.test(t)) return [String(Number(t))];
     return null;
   }
+  
+  function showError(msg, detail=""){
+    const box = document.getElementById("infoBox");
+    if (!box) return;
+  
+    box.innerHTML = `
+      <div style="font-weight:900; margin-bottom:6px; color:#e11d48;">${escapeHtml(msg)}</div>
+      ${detail ? `<div style="color:#666; font-size:13px; white-space:pre-wrap;">${escapeHtml(detail)}</div>` : ""}
+    `;
+  }
+  
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
 
   function clearMarks(){
     document.querySelectorAll(".seat").forEach(el => el.classList.remove("hit"));
@@ -502,9 +518,9 @@
   
     if (first){
   	first.scrollIntoView({behavior:"smooth", block:"center"});
-  	showSeatInfo(first.dataset.no);
+		showSeatInfo(first.dataset.no);
     }else{
-  	alert("找不到符合的桌位或姓名");
+		showError("找不到符合的桌位或姓名", `你輸入的是：${text}`);
     }
   }
 
