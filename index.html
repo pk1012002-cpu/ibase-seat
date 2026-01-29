@@ -167,7 +167,7 @@
     <h1>座位圖</h1>
 
     <div class="toolbar">
-      <input id="q" type="text" placeholder="搜尋桌號或姓名：127、林佳穎" />
+      <input id="q" type="text" placeholder="搜尋桌號或姓名：127、王小明" />
       <button id="btnSearch" type="button">搜尋</button>
       <button id="btnReset" type="button">重設</button>
     </div>
@@ -216,50 +216,72 @@
 
   <script>
     // 每桌的人名清單
-    const seatNames = {
-      "1": [
-        "林秋旭",
-        "林佳穎"
-      ],
-      "20": [
-        "Charlie",
-        "陳美麗",
-        "林志豪",
-        "黃怡君",
-        "張家豪",
-        "貴賓",
-        "貴賓",
-        "貴賓",
-        "貴賓",
-        "貴賓",
-        "貴賓",
-        "貴賓"
-      ],
-      "21": [
-        "Alice",
-        "Bob",
-        "陳美麗",
-        "David",
-        "Eve",
-        "Frank",
-        "Grace",
-        "Heidi",
-        "Ivan",
-        "Judy"
-      ],
-      "127": [
-        "董事長",
-        "總經理",
-        "副總A",
-        "副總B",
-        "貴賓一",
-        "貴賓二",
-        "貴賓三",
-        "貴賓四",
-        "貴賓五",
-        "貴賓六"
-      ]
-    };
+	const seatNames = {
+		"1": [
+			"Alex",
+			"Andy",
+			"Alen",
+			"Allen"
+		],
+		"2": [
+			"aaa",
+			"bbb",
+			"ccc",
+			"ddd",
+			"eee",
+			"fff",
+			"ggg",
+			"hhh",
+			"iii",
+			"jjj",
+			"kkk",
+			"kkkZZ"
+		]
+	};
+//    const seatNames = {
+//      "1": [
+//        "林秋旭",
+//        "林佳穎"
+//      ],
+//      "20": [
+//        "Charlie",
+//        "陳美麗",
+//        "林志豪",
+//        "黃怡君",
+//        "張家豪",
+//        "貴賓",
+//        "貴賓",
+//        "貴賓",
+//        "貴賓",
+//        "貴賓",
+//        "貴賓",
+//        "貴賓"
+//      ],
+//      "21": [
+//        "Alice",
+//        "Bob",
+//        "陳美麗",
+//        "David",
+//        "Eve",
+//        "Frank",
+//        "Grace",
+//        "Heidi",
+//        "Ivan",
+//        "Judy"
+//      ],
+//      "127": [
+//        "董事長",
+//        "總經理",
+//        "副總A",
+//        "副總B",
+//        "貴賓一",
+//        "貴賓二",
+//        "貴賓三",
+//        "貴賓四",
+//        "貴賓五",
+//        "貴賓六"
+//      ]
+//    };
 
     // 取得桌號對應的人名，若沒有設定則回傳空陣列
     function getNames(no){
@@ -498,7 +520,9 @@
       const t = document.createElementNS("http://www.w3.org/2000/svg","text");
       t.setAttribute("x", s.x);
       t.setAttribute("y", s.y);
-      t.textContent = s.no;
+	  
+      const mainSeats = ["1","2","3","4","5"];
+      t.textContent = mainSeats.includes(s.no) ? `主${s.no}` : s.no;
 
       g.appendChild(c);
       g.appendChild(t);
